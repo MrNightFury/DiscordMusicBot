@@ -1,0 +1,32 @@
+{
+  "name": "discordmusicbot",
+  "version": "1.0.0",
+  "description": "Discord bot for playing music",
+  "main": "dist/main.js",
+  "repository": "https://github.com/MrNightFury/DiscordMusicBot.git",
+  "author": "MrNightFury",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "run": "tsc && node dist/main.js"
+  },
+  "dependencies": {
+    "@discordjs/voice": "^0.17.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.9",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-fileupload": "^1.5.0",
+    "ffmpeg-static": "^5.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "libsodium-wrappers": "^0.7.13"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express-fileupload": "^1.5.0",
+    "@types/jsonwebtoken": "^9.0.6"
+  }
+}
