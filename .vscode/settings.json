@@ -1,0 +1,10 @@
+{
+    "json.schemas": [
+        {
+            "fileMatch": [
+                "storage/soundsList.json"
+            ],
+            "url": "./.vscode/schemas/soundList.json"
+        }
+    ]
+}

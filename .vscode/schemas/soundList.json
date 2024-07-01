@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "array",
+    "items": {
+        "properties": {
+            "path": {
+                "type": "string",
+                "description": "Path to file from default storage folder"
+            },
+            "name": {
+                "type": "string",
+                "description": "Displayed file name"
+            }
+        }
+    }
+}
