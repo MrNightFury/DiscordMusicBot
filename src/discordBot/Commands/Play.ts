@@ -29,7 +29,7 @@ export const Play: Command = {
 
         let soundName = interaction.options.get("sound")?.value as string;
 
-        if (this.player.playSound(interaction.guildId || "", soundName)) {
+        if (await this.player.playSound(interaction.guildId || "", soundName)) {
             interaction.followUp({ content: 'Sound played!', ephemeral: true });
         } else {
             interaction.followUp("Something went wrong...");

@@ -1,10 +1,13 @@
 import { Command } from "./Command.js";
 import { loadCommands } from "./Commands/index.js";
 import { Config } from "../Config.js";
-import { Client, CommandInteraction, GatewayIntentBits, Interaction, VoiceBasedChannel } from "discord.js";
+import { Client, CommandInteraction, GatewayIntentBits, Interaction, VoiceBasedChannel, VoiceChannel } from "discord.js";
 import { Connection } from "./Connection.js";
-import { VoiceConnectionStatus, createAudioPlayer, entersState, joinVoiceChannel } from "@discordjs/voice";
-import { AudioPlayer } from "./AudioPlayer.js";
+import { AudioPlayer, StreamType, VoiceConnectionStatus, createAudioPlayer, createAudioResource, entersState, joinVoiceChannel } from "@discordjs/voice";
+import * as AP from "./AudioPlayer.js";
+import prism from "prism-media";
+import AudioMixer from "audio-mixer";
+import { PassThrough } from "node:stream";
 
 export class Bot {
     config: Config;
@@ -13,7 +16,7 @@ export class Bot {
     commands: Command[] = [];
     connections: Map<string, Connection> = new Map();
 
-    player = new AudioPlayer(this);
+    player = new AP.AudioPlayer(this);
 
     constructor(config: Config) {
         this.config = config;
@@ -91,11 +94,19 @@ export class Bot {
         let player = createAudioPlayer();
         connection.subscribe(player);
 
+        var mixer = new AudioMixer.Mixer({
+            channels: 2,
+            sampleRate: 48000,
+            
+        });
+
         this.connections.set(channel.guildId, {
             guildId: channel.guildId,
             player: player,
-            connection: connection
+            connection: connection,
+            mixer: mixer,
         });
+
 
         connection.on("stateChange", (oldState, newState) => {
             console.log(`Voice connection state changed: ${oldState.status} -> ${newState.status}`);
@@ -103,5 +114,186 @@ export class Bot {
                 this.connections.delete(channel.guildId);
             }
         })
+    }
+
+    /**
+     * Mixed connection
+     * @deprecated
+     */
+    async _connectToVoiceChannel(channel: VoiceBasedChannel, interaction: CommandInteraction) {
+        let connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator
+        })
+        await entersState(connection, VoiceConnectionStatus.Ready, 30).catch(() => {
+            interaction.followUp({
+                ephemeral: true,
+                content: "Error joining channel!"
+            })
+        }).then(() => {
+            if (!channel) return;
+            interaction.followUp({
+                ephemeral: true,
+                content: `Joined channel ${channel?.name}`
+            })
+        })
+        
+        let player = createAudioPlayer();
+        connection.subscribe(player);
+
+        var mixer = new AudioMixer.Mixer({
+            channels: 2,
+            sampleRate: 48000,
+            bitDepth: 16
+        });
+
+        this.connections.set(channel.guildId, {
+            guildId: channel.guildId,
+            player: player,
+            connection: connection,
+            mixer: mixer,
+        });
+
+
+        connection.on("stateChange", (oldState, newState) => {
+            console.log(`Voice connection state changed: ${oldState.status} -> ${newState.status}`);
+            if (newState.status == VoiceConnectionStatus.Destroyed || newState.status == VoiceConnectionStatus.Disconnected) {
+                this.connections.delete(channel.guildId);
+            }
+        })
+    }
+
+    /**
+     * @deprecated
+     */
+    _play (player: AudioPlayer) {
+        var mixer = new AudioMixer.Mixer({
+            channels: 2,
+            sampleRate: 48000,
+            
+        });
+
+        // var input = new AudioMixer.Input({
+        //     channels: 2,
+        //     sampleRate: 48000,
+        //     volume: 100,
+        //     clearInterval: 250
+        // })
+
+        // let stream = this.player.createAudioStream("./storage/А может.mp3");
+        // stream.pipe(mixer);
+
+        // let buffer = readFileSync("./storage/А может.mp3");
+        // let audioStream = new Readable();
+        // audioStream.push(buffer);
+        // audioStream.push(null);
+        // const audioStream = createReadStream("./storage/А может.mp3");
+        // setTimeout(() => {
+        //     let audioStream2 = createReadStream("./storage/Аха-уху.mp3");
+        //     let transcoder2 = new prism.FFmpeg({
+        //         args: [
+        //             '-i', '-',
+        //             '-f', 's16le',
+        //             '-ar', '48000',
+        //             '-ac', '2'
+        //         ],
+        //     });
+        //     audioStream2.on('data', (chunk) => {
+        //         transcoder2.write(chunk);
+        //     });
+        //     let input2 = new AudioMixer.Input({
+        //         channels: 2,
+        //         sampleRate: 48000,
+        //         volume: 100,
+        //         clearInterval: 250
+        //     })
+        //     mixer.addInput(input2);
+        //     transcoder2.on('data', (chunk) => {
+        //         input2.write(chunk);
+        //     });
+
+        //     let resource = createAudioResource(mixer as any
+        //         , {inputType: StreamType.Raw}
+        //     );
+        //     player.play(resource);
+        // }, 5000)
+
+
+        
+        // console.log(audioStream.isPaused());
+        // const transcoder = new prism.FFmpeg({
+        //     args: [
+        //         '-i', '-',
+        //         '-f', 's16le',
+        //         '-ar', '48000',
+        //         '-ac', '2'
+        //     ],
+        // });
+        
+        const opusEncoder = new prism.opus.Encoder({
+            rate: 48000,
+            channels: 2,
+            frameSize: 960
+        });
+        
+        // mixer.addInput(input);
+        
+
+        // let mixed = new PassThrough();
+      
+        // audioStream.pipe(transcoder);
+        // audioStream2.pipe(transcoder2);
+
+        // audioStream.on('data', (chunk) => {
+        //     transcoder.write(chunk);
+        // });
+        
+        
+
+        // transcoder2.pipe(mixed);
+
+        // transcoder.pipe(input);
+        // transcoder2.pipe(input2);
+        
+        // transcoder.on('data', (chunk) => {
+        //     input.write(chunk);
+        // });
+        
+        // transcoder.on('end', () => {
+        //     input.end();
+        // });
+        
+        
+        
+        // transcoder2.on('end', () => {
+        //     input2.end();
+        // });
+
+        // audioStream.pipe(input);
+        // .pipe(input);
+        // opusEncoder.pipe
+        
+        // opusEncoder.pipe(mixed);
+        // mixer.pipe(mixed);
+        // let resource = createAudioResource(mixer);
+        // let a = 0;
+        // mixed.on("data", e => {
+        //     a++;
+        //     console.log(a, e);
+        // })
+        // transcoder.pipe(opusEncoder);
+        // mixer.pipe(opusEncoder);
+
+        let mixed = new PassThrough();
+        // mixer.pipe(mixed);
+        mixer.on("end", () => {
+            console.log("end");
+        })
+
+        let resource = createAudioResource(mixer as any
+            , {inputType: StreamType.Raw}
+        );
+        player.play(resource);
     }
 }

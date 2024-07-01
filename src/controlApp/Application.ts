@@ -50,7 +50,7 @@ export class Application {
             res.status(HTTPStatus.SUCCESS).json(this.fileWorker.getFilesList());
         })
 
-        app.post("/sound", (req, res) => {
+        app.post("/sound", async (req, res) => {
             console.log(req.body);
             let guildId = req.body.guildId;
             let sound = req.body.sound;
@@ -66,7 +66,7 @@ export class Application {
                 return;
             }
 
-            if (this.bot.player.playSound(guildId, sound)) {
+            if (await this.bot.player.playSound(guildId, sound)) {
                 res.status(HTTPStatus.SUCCESS).json({message: "Success"});
             } else {
                 res.status(HTTPStatus.IM_A_TEAPOT).json({message: "Something went wrong. Try to guess what exactly!"});
