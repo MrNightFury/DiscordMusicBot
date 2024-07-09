@@ -29,6 +29,5 @@ export function loadConfig() {
         },
         fileStoragePath: process.env.STORAGE_PATH || "./storage"
     } as Config;
-    console.log(config);
     return config;
 }
