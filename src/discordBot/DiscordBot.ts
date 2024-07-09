@@ -1,13 +1,14 @@
 import { Command } from "./Command.js";
 import { loadCommands } from "./Commands/index.js";
 import { Config } from "../Config.js";
-import { Client, CommandInteraction, GatewayIntentBits, Interaction, VoiceBasedChannel, VoiceChannel } from "discord.js";
+import { ButtonInteraction, Client, CommandInteraction, ComponentType, GatewayIntentBits, Interaction, MessageComponentInteraction, VoiceBasedChannel, VoiceChannel } from "discord.js";
 import { Connection } from "./Connection.js";
 import { AudioPlayer, StreamType, VoiceConnectionStatus, createAudioPlayer, createAudioResource, entersState, joinVoiceChannel } from "@discordjs/voice";
 import * as AP from "./AudioPlayer.js";
 import prism from "prism-media";
 import AudioMixer from "audio-mixer";
 import { PassThrough } from "node:stream";
+import { VoiceAudioPlayer } from "./VoiceAudioPlayer.js";
 import { FileWorker } from "../FileWorker.js";
 
 export class Bot {
@@ -20,7 +21,6 @@ export class Bot {
 
     player = new AP.AudioPlayer(this);
 
-    constructor(config: Config) {
     constructor(fileWorker: FileWorker, config: Config) {
         this.config = config;
         this.fileWorker = fileWorker;
@@ -56,13 +56,14 @@ export class Bot {
             // console.log(interaction);
             if (interaction.isCommand()) {
                 await this.handleSlashCommand(this.client, interaction);
+            } else if (interaction.isButton()) {
+                this.handleButtonClick(this.client, interaction);
             }
         })
     }
 
     async handleSlashCommand(client: Client, interaction: CommandInteraction) {
-        console.log(`Recieved command "${interaction.commandName}" from user "${interaction.user.id}"`);
-        console.log("Guild: " + interaction.guildId);
+        console.log(`Recieved command "${interaction.commandName}" from user "${interaction.user.id}" in guild "${interaction.guildId}"`);
 
         if (!interaction.guildId) return;
 
@@ -76,18 +77,29 @@ export class Bot {
         slashCommand.run.bind(this)(client, interaction);
     }
 
+    async handleButtonClick(client: Client, interaction: ButtonInteraction) {
+        let id = interaction.customId;
+        console.log("Button id:", id);
+        if (id) {
+            this.player.playSound(interaction.guildId || "", id);
+            interaction.deferUpdate();
+        }
+    }
+
     async connectToVoiceChannel(channel: VoiceBasedChannel, interaction: CommandInteraction) {
         let connection = joinVoiceChannel({
             channelId: channel.id,
             guildId: channel.guild.id,
             adapterCreator: channel.guild.voiceAdapterCreator
         })
-        await entersState(connection, VoiceConnectionStatus.Ready, 30).catch(() => {
+        await entersState(connection, VoiceConnectionStatus.Ready, 3e3)
+        .catch(() => {
             interaction.followUp({
                 ephemeral: true,
                 content: "Error joining channel!"
             })
-        }).then(() => {
+        })
+        .then(() => {
             if (!channel) return;
             interaction.followUp({
                 ephemeral: true,
@@ -95,20 +107,13 @@ export class Bot {
             })
         })
         
-        let player = createAudioPlayer();
-        connection.subscribe(player);
-
-        var mixer = new AudioMixer.Mixer({
-            channels: 2,
-            sampleRate: 48000,
-            
-        });
+        // let player = createAudioPlayer();
+        // connection.subscribe(player);
 
         this.connections.set(channel.guildId, {
             guildId: channel.guildId,
-            player: player,
+            player: new VoiceAudioPlayer(connection),
             connection: connection,
-            mixer: mixer,
         });
 
 
@@ -143,8 +148,8 @@ export class Bot {
             })
         })
         
-        let player = createAudioPlayer();
-        connection.subscribe(player);
+        // let player = createAudioPlayer();
+        // connection.subscribe(player);
 
         var mixer = new AudioMixer.Mixer({
             channels: 2,
@@ -154,9 +159,9 @@ export class Bot {
 
         this.connections.set(channel.guildId, {
             guildId: channel.guildId,
-            player: player,
+            player: new VoiceAudioPlayer(connection),
             connection: connection,
-            mixer: mixer,
+            // mixer: mixer,
         });
 
 

@@ -1,41 +1,32 @@
-import { createAudioResource } from "@discordjs/voice";
-import { Checker } from "../Checker.js";
+import { ApplicationCommandOptionType } from "discord.js";
 import { Command } from "../Command.js";
-import { ApplicationCommandOptionType, Guild } from "discord.js";
-
+import { PlayTryResult } from "../VoiceAudioPlayer.js";
 
 export const Play: Command = {
     name: "play",
-    description: "Play audio",
+    description: "Play video from youtube link",
     options: [
         {
             type: ApplicationCommandOptionType.String,
-            name: "sound",
-            description: "Play specified sound",
+            name: "url",
+            description: "Youtube video link",
             required: true
         }
     ],
-
     async run(client, interaction) {
-        let connection = this.connections.get(interaction.guildId || "");
-        if (!connection) {
-            let channel = await Checker.GetChannelFromInteraction(interaction);
-            if (!channel) {
+        let file = await this.fileWorker.downloadFile(interaction.options.get("url")?.value as string);
+        await interaction.followUp({
+            ephemeral: true,
+            content: "Downloaded!"
+        })
+        let result = this.player.playSound(interaction.guildId || "", file, true);
+        switch (result) {
+            case PlayTryResult.Played: 
+                interaction.editReply({content: "Playing!"});
                 return;
-            }
-
-            await this.connectToVoiceChannel(channel, interaction);
+            case PlayTryResult.Queued: 
+                interaction.editReply({content: "Queued!"});
+                return;
         }
-
-        let soundName = interaction.options.get("sound")?.value as string;
-
-        if (await this.player.playSound(interaction.guildId || "", soundName)) {
-            interaction.followUp({ content: 'Sound played!', ephemeral: true });
-        } else {
-            interaction.followUp("Something went wrong...");
-        }
-        // let resourse = createAudioResource("./sound.wav");
-        // connection.player.play(resourse);
-        // interaction.followUp({ content: 'Sound played!', ephemeral: true })
-    }
+    },
 }

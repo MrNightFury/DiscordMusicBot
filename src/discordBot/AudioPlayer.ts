@@ -8,6 +8,7 @@ import AudioMixer from "audio-mixer";
 import { AudioPlayerStatus, StreamType, createAudioResource } from "@discordjs/voice";
 import fs from "fs";
 import NanoTimer from "nanotimer";
+import { PlayTryResult } from "./VoiceAudioPlayer.js";
 
 export class AudioPlayer {
     bot: Bot;
@@ -103,7 +104,7 @@ Player status ${connection.player.state.status}`);
         setTimeout(() => {
             dataDoser.clearInterval();
             console.log("Callback")
-            connection.mixer.removeInput(input);
+            // connection.mixer.removeInput(input);
             transcoder.emit("end");
             input.emit("end");
             if (callback) {
@@ -129,15 +130,20 @@ Player status ${connection.player.state.status}`);
     }
 
 
-    playSound(guildId: string, sound: string): boolean {
+    playSound(guildId: string, sound: string, isSong?: boolean): PlayTryResult {
         let connection = this.bot.connections.get(guildId || "");
         if (!connection) {
-            return false;
+            return PlayTryResult.Error;
         }
 
-        let resource = createAudioResource(`./storage/${sound}.mp3`);
-        connection.player.play(resource);
-        return true;
+        // let resource = createAudioResource(`./storage/${sound}.mp3`);
+        // console.log(`./storage/${sound}.mp3`);
+        let path = this.bot.fileWorker.getFilePath(sound);
+        if (isSong) {
+            return connection.player.playSong(path);
+        } else {
+            return connection.player.playSound(path);
+        }
     }
 
     playSoundSampler(guildId: string, sound: string): boolean{

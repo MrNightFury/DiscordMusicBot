@@ -6,9 +6,9 @@ import fileUpload from "express-fileupload";
 import { Bot } from "../discordBot/DiscordBot.js";
 import { HTTPStatus } from "./HTTPStatus.js";
 import { Config } from "../Config.js";
-import { FileWorker } from "./FileWorker.js";
 import { FileWorker } from "../FileWorker.js";
 import { JWTHelper } from "../JWTHelper.js";
+import { PlayTryResult } from "../discordBot/VoiceAudioPlayer.js";
 
 export class Application {
     config: Config;
@@ -20,14 +20,12 @@ export class Application {
 
     listener: any;
 
-    constructor(config: Config, bot: Bot) {
     constructor(bot: Bot, fileWorker: FileWorker, config: Config, ) {
         this.config = config;
         this.bot = bot;
         this.expressApp = Express();
         this.fileWorker = fileWorker;
 
-        this.fileWorker = new FileWorker(this.config.fileStoragePath);
         // this.fileWorker = new FileWorker(this.config.fileStoragePath);
 
         this.setupHandlers();
@@ -70,7 +68,7 @@ export class Application {
                 return;
             }
 
-            if (await this.bot.player.playSound(guildId, sound)) {
+            if (this.bot.player.playSound(guildId, sound) == PlayTryResult.Played) {
                 res.status(HTTPStatus.SUCCESS).json({message: "Success"});
             } else {
                 res.status(HTTPStatus.IM_A_TEAPOT).json({message: "Something went wrong. Try to guess what exactly!"});
