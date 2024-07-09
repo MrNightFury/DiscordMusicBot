@@ -8,10 +8,12 @@ import * as AP from "./AudioPlayer.js";
 import prism from "prism-media";
 import AudioMixer from "audio-mixer";
 import { PassThrough } from "node:stream";
+import { FileWorker } from "../FileWorker.js";
 
 export class Bot {
     config: Config;
     client: Client;
+    fileWorker: FileWorker;
 
     commands: Command[] = [];
     connections: Map<string, Connection> = new Map();
@@ -19,7 +21,9 @@ export class Bot {
     player = new AP.AudioPlayer(this);
 
     constructor(config: Config) {
+    constructor(fileWorker: FileWorker, config: Config) {
         this.config = config;
+        this.fileWorker = fileWorker;
 
         this.client = new Client({
             intents: [

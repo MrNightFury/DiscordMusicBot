@@ -7,6 +7,7 @@ import { Bot } from "../discordBot/DiscordBot.js";
 import { HTTPStatus } from "./HTTPStatus.js";
 import { Config } from "../Config.js";
 import { FileWorker } from "./FileWorker.js";
+import { FileWorker } from "../FileWorker.js";
 import { JWTHelper } from "../JWTHelper.js";
 
 export class Application {
@@ -20,11 +21,14 @@ export class Application {
     listener: any;
 
     constructor(config: Config, bot: Bot) {
+    constructor(bot: Bot, fileWorker: FileWorker, config: Config, ) {
         this.config = config;
         this.bot = bot;
         this.expressApp = Express();
+        this.fileWorker = fileWorker;
 
         this.fileWorker = new FileWorker(this.config.fileStoragePath);
+        // this.fileWorker = new FileWorker(this.config.fileStoragePath);
 
         this.setupHandlers();
     }
