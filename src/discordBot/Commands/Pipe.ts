@@ -14,6 +14,11 @@ export const Ping: Command = {
             description: "Sound to play",
             required: false,
             autocomplete: true
+        }, {
+            type: ApplicationCommandOptionType.Number,
+            name: "time",
+            description: "Max interval in mins",
+            required: false
         }
     ],
     async run(client, interaction) {
@@ -38,6 +43,10 @@ export const Ping: Command = {
             if (connection.pipeMode) {
                 clearTimeout(connection.pipeMode.timer);
             }
+
+            let option = interaction.options.get("time");
+            let time = option && +option > 0 ? +option : 5;
+
             connection.pipeMode = {
                 sound: sound,
                 timer: setTimeout(() => {}, 1)
@@ -46,7 +55,7 @@ export const Ping: Command = {
                 if (connection) {
                     this.player.playSound(connection.guildId, sound)
                 }
-            }, 1);
+            }, time);
             await interaction.followUp({
                 ephemeral: true,
                 content: "Started pipe mode"
