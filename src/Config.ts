@@ -9,6 +9,7 @@ export interface Config {
 export interface BotConfig {
     token: string;
     prefix: string;
+    pipeModeMaxTimeMinutes: number;
 }
 
 export interface ServerConfig {
@@ -21,7 +22,8 @@ export function loadConfig() {
     let config = {
         bot: {
             token: process.env.TOKEN || "",
-            prefix: process.env.PREFIX || "/"
+            prefix: process.env.PREFIX || "/",
+            pipeModeMaxTimeMinutes: process.env.PIPE_MODE_MAX_TIME || 10
         },
         server: {
             host: "localhost",

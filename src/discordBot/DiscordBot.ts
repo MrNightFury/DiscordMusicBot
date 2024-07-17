@@ -1,7 +1,7 @@
 import { Command } from "./Command.js";
 import { loadCommands } from "./Commands/index.js";
 import { Config } from "../Config.js";
-import { ButtonInteraction, Client, CommandInteraction, ComponentType, GatewayIntentBits, Interaction, MessageComponentInteraction, VoiceBasedChannel, VoiceChannel } from "discord.js";
+import { AutocompleteInteraction, ButtonInteraction, Client, CommandInteraction, ComponentType, GatewayIntentBits, Interaction, MessageComponentInteraction, VoiceBasedChannel, VoiceChannel } from "discord.js";
 import { Connection } from "./Connection.js";
 import { AudioPlayer, StreamType, VoiceConnectionStatus, createAudioPlayer, createAudioResource, entersState, joinVoiceChannel } from "@discordjs/voice";
 import * as AP from "./AudioPlayer.js";
@@ -30,7 +30,6 @@ export class Bot {
                 GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates,
                 GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages
             ]
-            // intents: 8
         });
     }
 
@@ -53,11 +52,12 @@ export class Bot {
         this.client.application.commands.set(this.commands);
 
         this.client.on("interactionCreate", async (interaction: Interaction) => {
-            // console.log(interaction);
             if (interaction.isCommand()) {
                 await this.handleSlashCommand(this.client, interaction);
             } else if (interaction.isButton()) {
                 this.handleButtonClick(this.client, interaction);
+            } else if (interaction.isAutocomplete()) {
+                this.handleAutocomplete(this.client, interaction);
             }
         })
     }
@@ -75,6 +75,18 @@ export class Bot {
 
         await interaction.deferReply();
         slashCommand.run.bind(this)(client, interaction);
+    }
+
+    async handleAutocomplete(client: Client, interaction: AutocompleteInteraction) {
+        console.log(`Recieved autocomplete interaction "${interaction.commandName}" from user "${interaction.user.id}" in guild "${interaction.guildId}"`)
+        if (!interaction.guildId) return;
+
+        const slashCommand = this.commands.find(c => c.name === interaction.commandName);
+        if (!slashCommand || !slashCommand.autocomplete) {
+            interaction.respond([{ name: "Error", value: "Error" }]);
+            return;
+        }
+        slashCommand.autocomplete.bind(this)(client, interaction);
     }
 
     async handleButtonClick(client: Client, interaction: ButtonInteraction) {
@@ -106,9 +118,6 @@ export class Bot {
                 content: `Joined channel ${channel?.name}`
             })
         })
-        
-        // let player = createAudioPlayer();
-        // connection.subscribe(player);
 
         this.connections.set(channel.guildId, {
             guildId: channel.guildId,
@@ -116,10 +125,10 @@ export class Bot {
             connection: connection,
         });
 
-
         connection.on("stateChange", (oldState, newState) => {
             console.log(`Voice connection state changed: ${oldState.status} -> ${newState.status}`);
             if (newState.status == VoiceConnectionStatus.Destroyed || newState.status == VoiceConnectionStatus.Disconnected) {
+                clearTimeout(this.connections.get(channel.guildId)?.pipeMode?.timer);
                 this.connections.delete(channel.guildId);
             }
         })

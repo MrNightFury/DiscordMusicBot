@@ -3,6 +3,11 @@ import { Mixer } from "audio-mixer";
 import { PassThrough } from "stream";
 import { VoiceAudioPlayer } from "./VoiceAudioPlayer";
 
+export interface PipeMode {
+    sound: string,
+    timer: NodeJS.Timeout
+}
+
 export interface Connection {
     guildId: string;
     player: VoiceAudioPlayer;
@@ -10,4 +15,6 @@ export interface Connection {
     // mixer?: PassThrough;
     resource?: AudioResource;
     // mixer: Mixer;
+    pipeMode?: PipeMode;
+    // pipeModeSound?: string;
 }
