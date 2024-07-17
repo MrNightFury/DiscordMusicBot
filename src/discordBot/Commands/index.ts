@@ -1,7 +1,8 @@
-import { Command, isCommand } from "../Command.js";
-import { fileURLToPath } from "url";
 import path from "path";
 import * as fs from "fs";
+import { fileURLToPath } from "url";
+
+import { Command, isCommand } from "../Command.js";
 
 // export const commands: Command[] = []
 

@@ -10,6 +10,7 @@ import { FileWorker } from "../FileWorker.js";
 import { JWTHelper } from "../JWTHelper.js";
 import { PlayTryResult } from "../discordBot/VoiceAudioPlayer.js";
 
+
 export class Application {
     config: Config;
     

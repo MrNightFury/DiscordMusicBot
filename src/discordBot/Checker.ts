@@ -1,5 +1,6 @@
 import { CommandInteraction, VoiceBasedChannel } from "discord.js";
 
+
 export class Checker {
     static async GetChannelFromInteraction(interaction: CommandInteraction): Promise<VoiceBasedChannel | false> {
         if (!interaction.guildId) {

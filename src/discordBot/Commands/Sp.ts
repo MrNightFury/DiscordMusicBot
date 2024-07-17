@@ -1,7 +1,7 @@
-import { createAudioResource } from "@discordjs/voice";
+import { ApplicationCommandOptionType, ButtonComponent, ButtonStyle, ComponentType } from "discord.js";
+
 import { Checker } from "../Checker.js";
 import { Command } from "../Command.js";
-import { ActionRow, ActionRowData, ApplicationCommandOptionType, ButtonComponent, ButtonStyle, Component, ComponentType, Guild } from "discord.js";
 
 
 export const sp: Command = {

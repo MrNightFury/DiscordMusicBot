@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 
+
 export interface Config {
     bot: BotConfig;
     server: ServerConfig;

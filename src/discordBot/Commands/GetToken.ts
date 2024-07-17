@@ -1,6 +1,7 @@
 import { Command } from "../Command.js";
 import { JWTHelper } from "../../JWTHelper.js"
 
+
 export const GetToken: Command = {
     name: "get_token",
     description: "Get token for use in soundpad desktop app",

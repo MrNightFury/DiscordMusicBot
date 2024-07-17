@@ -1,14 +1,14 @@
-import { Bot } from "./DiscordBot";
 import prism from "prism-media";
+import mp3 from "mp3-duration";
 import { createReadStream, readFileSync } from "fs";
 import { Readable } from "stream";
-import mp3 from "mp3-duration";
-import { Connection } from "./Connection.js";
 import AudioMixer from "audio-mixer";
-import { AudioPlayerStatus, StreamType, createAudioResource } from "@discordjs/voice";
-import fs from "fs";
 import NanoTimer from "nanotimer";
+
+import { Bot } from "./DiscordBot";
+import { Connection } from "./Connection.js";
 import { PlayTryResult } from "./VoiceAudioPlayer.js";
+
 
 export class AudioPlayer {
     bot: Bot;

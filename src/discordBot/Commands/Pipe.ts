@@ -1,6 +1,8 @@
 import { ApplicationCommandOptionType } from "discord.js";
+
 import { Command } from "../Command.js";
 import { PipeMode } from "../Connection.js";
+
 
 export const Ping: Command = {
     name: "pipe",

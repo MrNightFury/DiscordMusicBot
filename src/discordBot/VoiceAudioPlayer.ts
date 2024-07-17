@@ -32,6 +32,7 @@ export class VoiceAudioPlayer {
     }
 
     playSound(soundFile: string): PlayTryResult {
+        console.log("Playing sound " + soundFile);
         if (this.isPlayingSong) {
             return PlayTryResult.BlockedBySong;
         }

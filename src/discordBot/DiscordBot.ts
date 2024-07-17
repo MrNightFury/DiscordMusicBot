@@ -1,15 +1,17 @@
+import prism from "prism-media";
+import AudioMixer from "audio-mixer";
+import { AutocompleteInteraction, ButtonInteraction, Client, CommandInteraction, GatewayIntentBits, Interaction, VoiceBasedChannel } from "discord.js";
+import { AudioPlayer, StreamType, VoiceConnectionStatus, createAudioResource, entersState, joinVoiceChannel } from "@discordjs/voice";
+
 import { Command } from "./Command.js";
 import { loadCommands } from "./Commands/index.js";
 import { Config } from "../Config.js";
-import { AutocompleteInteraction, ButtonInteraction, Client, CommandInteraction, ComponentType, GatewayIntentBits, Interaction, MessageComponentInteraction, VoiceBasedChannel, VoiceChannel } from "discord.js";
 import { Connection } from "./Connection.js";
-import { AudioPlayer, StreamType, VoiceConnectionStatus, createAudioPlayer, createAudioResource, entersState, joinVoiceChannel } from "@discordjs/voice";
 import * as AP from "./AudioPlayer.js";
-import prism from "prism-media";
-import AudioMixer from "audio-mixer";
 import { PassThrough } from "node:stream";
 import { VoiceAudioPlayer } from "./VoiceAudioPlayer.js";
 import { FileWorker } from "../FileWorker.js";
+
 
 export class Bot {
     config: Config;

@@ -1,6 +1,7 @@
-import { AutocompleteInteraction, BaseApplicationCommandData, CommandInteraction } from "discord.js";
-import { ChatInputApplicationCommandData, Client } from "discord.js";
-import { Bot } from "./DiscordBot";
+import { AutocompleteInteraction, CommandInteraction, ChatInputApplicationCommandData, Client } from "discord.js";
+
+import { Bot } from "./DiscordBot.js";
+
 
 export interface Command extends ChatInputApplicationCommandData {
     run: (this: Bot, client: Client, interaction: CommandInteraction) => {};

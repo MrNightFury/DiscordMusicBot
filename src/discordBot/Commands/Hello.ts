@@ -1,5 +1,6 @@
 import { Command } from "../Command.js";
 
+
 export const Ping: Command = {
     name: "hello",
     description: "Say hello",

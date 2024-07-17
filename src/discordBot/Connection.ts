@@ -1,7 +1,7 @@
-import { AudioPlayer, AudioResource, VoiceConnection } from "@discordjs/voice";
-import { Mixer } from "audio-mixer";
-import { PassThrough } from "stream";
+import { AudioResource, VoiceConnection } from "@discordjs/voice";
+
 import { VoiceAudioPlayer } from "./VoiceAudioPlayer";
+
 
 export interface PipeMode {
     sound: string,

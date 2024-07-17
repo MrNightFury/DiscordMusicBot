@@ -1,5 +1,5 @@
-import { Guild } from "discord.js";
 import jwt from "jsonwebtoken";
+
 
 export interface Token {
     guild: string;

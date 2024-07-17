@@ -3,6 +3,7 @@ import { loadConfig } from "./Config.js";
 import { Application } from "./controlApp/Application.js";
 import { FileWorker } from "./FileWorker.js";
 
+
 let config = loadConfig();
 console.log("Loaded config: ", config);
 
