@@ -146,6 +146,15 @@ export class AudioPlayer {
         }
     }
 
+    skipSong(guildId: string) {
+        let connection = this.bot.connections.get(guildId || "");
+        if (!connection) {
+            return false;
+        }
+
+        return connection.player.skipSong();
+    }
+
     playSoundSampler(guildId: string, sound: string): boolean{
         let connection = this.bot.connections.get(guildId || "");
         if (!connection) {
