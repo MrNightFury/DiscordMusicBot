@@ -37,8 +37,8 @@ export class AudioPlayer {
             channels: 2,
             frameSize: 960
         });
-      
-        audioStream.pipe(transcoder).pipe(opusEncoder);
+
+        audioStream.pipe(transcoder as any).pipe(opusEncoder);
       
         return opusEncoder;
     }

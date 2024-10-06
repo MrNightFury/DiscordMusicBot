@@ -1,7 +1,7 @@
 import { ApplicationCommandOptionType } from "discord.js";
 
-import { Command } from "../Command.js";
-import { PlayTryResult } from "../VoiceAudioPlayer.js";
+import { Command } from "../../Command.js";
+import { PlayTryResult } from "../../VoiceAudioPlayer.js";
 
 
 export const Play: Command = {

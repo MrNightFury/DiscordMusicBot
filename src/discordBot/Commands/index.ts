@@ -4,12 +4,13 @@ import { fileURLToPath } from "url";
 
 import { Command, isCommand } from "../Command.js";
 
-// export const commands: Command[] = []
 
-export async function loadCommands(dirname?: string) {
+export async function loadCommands(currentDir?: string) {
     const filename = fileURLToPath(import.meta.url);
-    if (!dirname) {
-        dirname = path.dirname(filename);
+
+    let dirname = path.dirname(filename)
+    if (currentDir) {
+        dirname = path.join(dirname, currentDir);
     }
 
     let commands: Command[] = [];
@@ -23,10 +24,14 @@ export async function loadCommands(dirname?: string) {
 
         // Handle recursive directories
         if (fs.lstatSync(fullPath).isDirectory()) {
-            commands = commands.concat(commands, await loadCommands(fullPath));
+            // let c = 
+            // console.log("concatting " + commands.map(item => item.name) + " and " + c.map(item => item.name))
+            commands = commands.concat(await loadCommands(file));
         } else {
+            let modulePath = (currentDir ? currentDir + "/" : "") + file;
+            console.log("Imporing " + modulePath)
             // Dynamic import terribleness
-            let module = await import("./" + file);
+            let module = await import("./" + modulePath);
             const propertyNames = Object.getOwnPropertyNames(module);
             for (const propertyName of propertyNames) {
                 const propertyDescriptor = Object.getOwnPropertyDescriptor(module, propertyName);
