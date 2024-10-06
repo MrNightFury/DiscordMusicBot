@@ -2,6 +2,8 @@ import fs from "fs";
 import path from "path";
 import ytdl from "ytdl-core";
 
+import { youtubeDl } from "youtube-dl-exec"
+
 
 export interface SoundFileInfo {
     path: string;
@@ -43,19 +45,30 @@ export class FileWorker {
         return path.join(this.basePath, name + ".mp3");
     }
 
-    downloadFile(url: string) {
-        let id = "temp/" + ytdl.getURLVideoID(url) + '-' + Date.now();
-        const videoReadableStream = ytdl(url, { filter: "audioonly" });
-        const fileWriteStream = fs.createWriteStream(path.join(this.basePath, id + ".mp3"));
-        videoReadableStream.pipe(fileWriteStream);
+    async downloadFile(url: string) {
+        console.log(`Downloading file ${url}`);
+
+        let id = "temp/" + ytdl.getURLVideoID(url);
+
+        if (fs.existsSync(path.join(this.basePath, id + ".mp3"))) {
+            console.log("Skipping download using cache")
+            return id;
+        }
 
         return new Promise<string>((resolve, reject) => {
-            fileWriteStream.on("finish", () => {
-                resolve(id);
-            });
-            fileWriteStream.on("error", (err) => {
+            youtubeDl(url, {
+                output: path.join(this.basePath, id + ".mp3"),
+                extractAudio: true,
+                audioFormat: "mp3"
+            }).catch(err => {
+                console.error(err);
                 reject(err);
-            });
+            }).then(data => {
+                if (data && typeof data == "string" && data.indexOf("Deleting original file") != -1) {
+                    console.log("File downloaded")
+                    resolve(id);
+                }
+            })
         })
     }
 }
