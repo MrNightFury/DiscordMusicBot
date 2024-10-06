@@ -50,9 +50,18 @@ export class VoiceAudioPlayer {
             return PlayTryResult.Queued;
         }
         this.isPlayingSong = true;
-        let resource = createAudioResource(fs.createReadStream(musicFile));
+        let resource = createAudioResource(fs.createReadStream(musicFile), { inlineVolume: true });
+        resource.volume?.setVolume(.15);
         this.player.play(resource);
         return PlayTryResult.Played;
+    }
+
+    skipSong() {
+        if (!this.isPlayingSong) {
+            return false;
+        }
+        this.player.stop();
+        return true
     }
 
     private onSoundEndCallback() {
