@@ -158,9 +158,6 @@ export class Bot {
                 content: `Joined channel ${channel?.name}`
             })
         })
-        
-        // let player = createAudioPlayer();
-        // connection.subscribe(player);
 
         var mixer = new AudioMixer.Mixer({
             channels: 2,
@@ -171,8 +168,7 @@ export class Bot {
         this.connections.set(channel.guildId, {
             guildId: channel.guildId,
             player: new VoiceAudioPlayer(connection),
-            connection: connection,
-            // mixer: mixer,
+            connection: connection
         });
 
 
@@ -193,63 +189,6 @@ export class Bot {
             sampleRate: 48000,
             
         });
-
-        // var input = new AudioMixer.Input({
-        //     channels: 2,
-        //     sampleRate: 48000,
-        //     volume: 100,
-        //     clearInterval: 250
-        // })
-
-        // let stream = this.player.createAudioStream("./storage/А может.mp3");
-        // stream.pipe(mixer);
-
-        // let buffer = readFileSync("./storage/А может.mp3");
-        // let audioStream = new Readable();
-        // audioStream.push(buffer);
-        // audioStream.push(null);
-        // const audioStream = createReadStream("./storage/А может.mp3");
-        // setTimeout(() => {
-        //     let audioStream2 = createReadStream("./storage/Аха-уху.mp3");
-        //     let transcoder2 = new prism.FFmpeg({
-        //         args: [
-        //             '-i', '-',
-        //             '-f', 's16le',
-        //             '-ar', '48000',
-        //             '-ac', '2'
-        //         ],
-        //     });
-        //     audioStream2.on('data', (chunk) => {
-        //         transcoder2.write(chunk);
-        //     });
-        //     let input2 = new AudioMixer.Input({
-        //         channels: 2,
-        //         sampleRate: 48000,
-        //         volume: 100,
-        //         clearInterval: 250
-        //     })
-        //     mixer.addInput(input2);
-        //     transcoder2.on('data', (chunk) => {
-        //         input2.write(chunk);
-        //     });
-
-        //     let resource = createAudioResource(mixer as any
-        //         , {inputType: StreamType.Raw}
-        //     );
-        //     player.play(resource);
-        // }, 5000)
-
-
-        
-        // console.log(audioStream.isPaused());
-        // const transcoder = new prism.FFmpeg({
-        //     args: [
-        //         '-i', '-',
-        //         '-f', 's16le',
-        //         '-ar', '48000',
-        //         '-ac', '2'
-        //     ],
-        // });
         
         const opusEncoder = new prism.opus.Encoder({
             rate: 48000,
@@ -257,56 +196,8 @@ export class Bot {
             frameSize: 960
         });
         
-        // mixer.addInput(input);
-        
-
-        // let mixed = new PassThrough();
-      
-        // audioStream.pipe(transcoder);
-        // audioStream2.pipe(transcoder2);
-
-        // audioStream.on('data', (chunk) => {
-        //     transcoder.write(chunk);
-        // });
-        
-        
-
-        // transcoder2.pipe(mixed);
-
-        // transcoder.pipe(input);
-        // transcoder2.pipe(input2);
-        
-        // transcoder.on('data', (chunk) => {
-        //     input.write(chunk);
-        // });
-        
-        // transcoder.on('end', () => {
-        //     input.end();
-        // });
-        
-        
-        
-        // transcoder2.on('end', () => {
-        //     input2.end();
-        // });
-
-        // audioStream.pipe(input);
-        // .pipe(input);
-        // opusEncoder.pipe
-        
-        // opusEncoder.pipe(mixed);
-        // mixer.pipe(mixed);
-        // let resource = createAudioResource(mixer);
-        // let a = 0;
-        // mixed.on("data", e => {
-        //     a++;
-        //     console.log(a, e);
-        // })
-        // transcoder.pipe(opusEncoder);
-        // mixer.pipe(opusEncoder);
 
         let mixed = new PassThrough();
-        // mixer.pipe(mixed);
         mixer.on("end", () => {
             console.log("end");
         })

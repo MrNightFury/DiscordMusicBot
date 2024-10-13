@@ -12,9 +12,6 @@ export interface Connection {
     guildId: string;
     player: VoiceAudioPlayer;
     connection: VoiceConnection;
-    // mixer?: PassThrough;
     resource?: AudioResource;
-    // mixer: Mixer;
     pipeMode?: PipeMode;
-    // pipeModeSound?: string;
 }

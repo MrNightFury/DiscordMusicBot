@@ -1,7 +1,4 @@
-import { ApplicationCommandOptionType } from "discord.js";
-
 import { Command } from "../../Command.js";
-import { PlayTryResult } from "../../VoiceAudioPlayer.js";
 
 
 export const Skip: Command = {
@@ -16,9 +13,9 @@ export const Skip: Command = {
             })
         } else {
             await interaction.followUp({
-            ephemeral: true,
-            content: "Error"
-        })
+                ephemeral: true,
+                content: "Error"
+            })
         }
     },
 }

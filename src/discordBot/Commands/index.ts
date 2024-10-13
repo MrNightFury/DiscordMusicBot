@@ -24,8 +24,6 @@ export async function loadCommands(currentDir?: string) {
 
         // Handle recursive directories
         if (fs.lstatSync(fullPath).isDirectory()) {
-            // let c = 
-            // console.log("concatting " + commands.map(item => item.name) + " and " + c.map(item => item.name))
             commands = commands.concat(await loadCommands(file));
         } else {
             let modulePath = (currentDir ? currentDir + "/" : "") + file;

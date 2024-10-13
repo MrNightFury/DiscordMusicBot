@@ -21,13 +21,11 @@ export class Application {
 
     listener: any;
 
-    constructor(bot: Bot, fileWorker: FileWorker, config: Config, ) {
+    constructor(bot: Bot, fileWorker: FileWorker, config: Config) {
         this.config = config;
         this.bot = bot;
         this.expressApp = Express();
         this.fileWorker = fileWorker;
-
-        // this.fileWorker = new FileWorker(this.config.fileStoragePath);
 
         this.setupHandlers();
     }
@@ -49,7 +47,6 @@ export class Application {
         }));
 
         app.get("/sounds", (req, res) => {
-            console.log("asd")
             res.status(HTTPStatus.SUCCESS).json(this.fileWorker.getFilesList());
         })
 

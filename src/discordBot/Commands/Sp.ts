@@ -6,7 +6,6 @@ import { Command } from "../Command.js";
 
 export const sp: Command = {
     name: "sp",
-    
     description: "Play soundpad sound",
     options: [
         {
@@ -24,14 +23,13 @@ export const sp: Command = {
             if (!channel) {
                 return;
             }
-
             await this.connectToVoiceChannel(channel, interaction);
         }
 
         let soundName = interaction.options.get("sound")?.value as string;
 
         if (soundName) {
-            if (await this.player.playSound(interaction.guildId || "", soundName)) {
+            if (this.player.playSound(interaction.guildId || "", soundName)) {
                 interaction.followUp({ content: 'Sound played!', ephemeral: true });
             } else {
                 interaction.followUp("Something went wrong...");
@@ -51,7 +49,6 @@ export const sp: Command = {
                 }
                 rows[rows.length - 1].push(buttons.shift() as any);
             }
-            console.log(rows);
 
             interaction.followUp({
                 content: "MrNightFury's Soundpad",
@@ -63,10 +60,5 @@ export const sp: Command = {
                 })
             })
         }
-
-        
-        // let resourse = createAudioResource("./sound.wav");
-        // connection.player.play(resourse);
-        // interaction.followUp({ content: 'Sound played!', ephemeral: true })
     }
 }

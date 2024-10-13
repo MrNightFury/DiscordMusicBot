@@ -47,9 +47,6 @@ export class AudioPlayer {
      * @deprecated
      */
     async _startSoundPlay(connection: Connection, soundFilePath: string, callback?: () => void): Promise<boolean> {
-//         console.log(`Trying to play ${soundFilePath}
-// Player status ${connection.player.state.status}`);
-
         let buffer = readFileSync(soundFilePath);
         let time = await mp3(buffer);
 
@@ -76,8 +73,6 @@ export class AudioPlayer {
             clearInterval: 250
         })
         
-        // connection.mixer.addInput(input);
-
         audioStream.on('data', (chunk) => {
             transcoder.write(chunk);
         });
@@ -93,18 +88,9 @@ export class AudioPlayer {
             console.log(buff.length)
         }, "", 1000 / this.mixRate + 'm');
 
-        // if (connection.player.state.status != AudioPlayerStatus.Playing) {
-        //     console.log("Play!");
-        //     let resource = createAudioResource(connection.mixer as any
-        //         , {inputType: StreamType.Raw}
-        //     );
-        //     connection.player.play(resource);
-        // }
-
         setTimeout(() => {
             dataDoser.clearInterval();
             console.log("Callback")
-            // connection.mixer.removeInput(input);
             transcoder.emit("end");
             input.emit("end");
             if (callback) {
@@ -116,6 +102,7 @@ export class AudioPlayer {
     }
 
     /**
+     * @deprecated
      * Mixed play sound
      */
     async _playSound(guildId: string, sound: string): Promise<boolean> {
@@ -136,8 +123,7 @@ export class AudioPlayer {
             return PlayTryResult.Error;
         }
 
-        // let resource = createAudioResource(`./storage/${sound}.mp3`);
-        // console.log(`./storage/${sound}.mp3`);
+        console.log(`Playing ${sound} to ${guildId}`);
         let path = this.bot.fileWorker.getFilePath(sound);
         if (isSong) {
             return connection.player.playSong(path);
@@ -155,6 +141,9 @@ export class AudioPlayer {
         return connection.player.skipSong();
     }
 
+    /**
+     * @deprecated
+     */
     playSoundSampler(guildId: string, sound: string): boolean{
         let connection = this.bot.connections.get(guildId || "");
         if (!connection) {
@@ -163,6 +152,4 @@ export class AudioPlayer {
 
         return true;
     }
-
-    
 }
