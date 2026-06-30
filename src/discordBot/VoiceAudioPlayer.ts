@@ -17,6 +17,11 @@ export class VoiceAudioPlayer {
     isPlayingSong: boolean = false;
     songsQueue: string[] = [];
 
+    loopEnabled: boolean = false;
+    currentSongPath: string = "";
+    private wasSkipped: boolean = false;
+    onSongStart?: (songTitle: string) => void;
+
     onEndCallback?: () => void;
 
     get isPlaying() {
@@ -33,6 +38,10 @@ export class VoiceAudioPlayer {
             if (newState.status == AudioPlayerStatus.Idle) {
                 this.onSoundEndCallback();
             }
+        });
+        this.player.on("error", (err: unknown) => {
+            const e = err as { message?: string; stack?: string };
+            console.error(`[PLAYER ERROR ${this.connection.guildId}]`, e?.message, e?.stack);
         });
     }
 
@@ -55,14 +64,24 @@ export class VoiceAudioPlayer {
             return PlayTryResult.Queued;
         }
 
-        let id = musicFile.split("\\").pop()?.split(".")[0] || "";
+        this.currentSongPath = musicFile;
+
+        let id = musicFile.split(/[\\/]/).pop()?.split(".")[0] || "";
         // console.log(id, ytdl.validateID(id), this.connection.lastCommandChannel);
-        if (ytdl.validateID(id) && this.connection.lastCommandChannel) {
+        if (ytdl.validateID(id)) {
             ytdl.getBasicInfo(id).then(info => {
-                this.connection.lastCommandChannel?.send({
-                    content: `Now playing:\n> ${info.videoDetails.title}`,
-                })
-            })
+                if (!this.isPlayingSong || this.currentSongPath !== musicFile) {
+                    return;
+                }
+
+                if (this.onSongStart) {
+                    this.onSongStart(info.videoDetails.title);
+                } else if (this.connection.lastCommandChannel) {
+                    this.connection.lastCommandChannel?.send({
+                        content: `Now playing:\n> ${info.videoDetails.title}`,
+                    });
+                }
+            });
         }
         
         this.isPlayingSong = true;
@@ -76,8 +95,23 @@ export class VoiceAudioPlayer {
         if (!this.isPlayingSong) {
             return false;
         }
+        this.wasSkipped = true;
         this.player.stop();
         return true
+    }
+
+    toggleLoop(): boolean {
+        this.loopEnabled = !this.loopEnabled;
+        return this.loopEnabled;
+    }
+
+    stop() {
+        this.songsQueue = [];
+        this.loopEnabled = false;
+        this.currentSongPath = "";
+        this.wasSkipped = false;
+        this.isPlayingSong = false;
+        this.player.stop();
     }
 
     private onSoundEndCallback() {
@@ -91,8 +125,17 @@ export class VoiceAudioPlayer {
         }
 
         if (this.songsQueue.length == 0) {
-            this.isPlayingSong = false;
+            if (this.loopEnabled && !this.wasSkipped && this.currentSongPath) {
+                // Loop: replay current song
+                this.wasSkipped = false;
+                this.playSong(this.currentSongPath);
+            } else {
+                // Stop: either loop is off, or user explicitly skipped
+                this.wasSkipped = false;
+                this.isPlayingSong = false;
+            }
         } else {
+            this.wasSkipped = false;
             this.playSong(this.songsQueue.shift() as string);
         }
     }

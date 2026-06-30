@@ -2,6 +2,7 @@ import { ApplicationCommandOptionType, ButtonComponent, ButtonStyle, ComponentTy
 
 import { Checker } from "../Checker.ts";
 import { Command } from "../Command.ts";
+import { PlayTryResult } from "../VoiceAudioPlayer.ts";
 
 
 export const sp: Command = {
@@ -29,7 +30,7 @@ export const sp: Command = {
         let soundName = interaction.options.get("sound")?.value as string;
 
         if (soundName) {
-            if (this.player.playSound(interaction.guildId || "", soundName)) {
+            if (this.player.playSound(interaction.guildId || "", soundName) == PlayTryResult.Played) {
                 interaction.followUp({ content: 'Sound played!', ephemeral: true });
             } else {
                 interaction.followUp("Something went wrong...");

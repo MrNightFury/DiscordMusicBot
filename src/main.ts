@@ -1,6 +1,10 @@
 import { bootstrap } from "global-agent";
 import { ProxyAgent, setGlobalDispatcher } from "undici";
 
+process.on("unhandledRejection", (reason) => {
+    console.error("Unhandled rejection (suppressed):", reason);
+});
+
 const proxyUrl = process.env.HTTP_PROXY || process.env.HTTPS_PROXY;
 if (proxyUrl) {
     process.env.GLOBAL_AGENT_ENVIRONMENT_VARIABLE_NAMESPACE = "";
@@ -16,7 +20,12 @@ import { FileWorker } from "./FileWorker.ts";
 
 
 let config = loadConfig();
-console.log("Loaded config: ", config);
+console.log("Loaded config", {
+    server: config.server,
+    fileStoragePath: config.fileStoragePath,
+    prefix: config.bot.prefix,
+    pipeModeMaxTimeMinutes: config.bot.pipeModeMaxTimeMinutes
+});
 
 let fileWorker = new FileWorker(config.fileStoragePath);
 

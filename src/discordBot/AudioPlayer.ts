@@ -142,6 +142,25 @@ export class AudioPlayer {
         return connection.player.skipSong();
     }
 
+    toggleLoop(guildId: string): boolean | null {
+        let connection = this.bot.connections.get(guildId || "");
+        if (!connection) {
+            return null;
+        }
+        return connection.player.toggleLoop();
+    }
+
+    stop(guildId: string) {
+        let connection = this.bot.connections.get(guildId || "");
+        if (!connection) {
+            return false;
+        }
+
+        connection.player.stop();
+        connection.connection.destroy();
+        return true;
+    }
+
     /**
      * @deprecated
      */

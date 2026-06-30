@@ -1,15 +1,21 @@
 services:
-  zapret:
-    build:
-      context: ./zapret
-      dockerfile: Dockerfile
-    container_name: zapret
+  vault-agent:
+    image: hashicorp/vault:1.18
+    container_name: newdiscord-vault-agent
     restart: unless-stopped
-    network_mode: host
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-    privileged: true
+    user: "0:0"
+    environment:
+      - HOME=/tmp
+      - VAULT_ADDR=http://vault:8200
+    networks:
+      - secrets-net
+    volumes:
+      - ./vault/agent.hcl:/etc/vault/agent.hcl:ro
+      - ./vault/secrets.env.tmpl:/etc/vault/secrets.env.tmpl:ro
+      - ./vault/role-id:/etc/vault/role-id:ro
+      - ./vault/secret-id:/etc/vault/secret-id:ro
+      - ./vault/secrets:/etc/vault/secrets
+    command: agent -config=/etc/vault/agent.hcl
 
   discord-music-bot:
     build:
@@ -19,13 +25,29 @@ services:
     restart: unless-stopped
     network_mode: host
     depends_on:
-      - zapret
+      - vault-agent
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Waiting for vault secrets..."
+        until [ -f /etc/vault/secrets/secrets.env ]; do
+          sleep 0.5
+        done
+        echo "Loading secrets from vault..."
+        . /etc/vault/secrets/secrets.env
+        echo "Starting bot..."
+        exec npx tsx src/main.ts
     environment:
-      - TOKEN=${TOKEN}
       - PREFIX=${PREFIX:-/}
       - PIPE_MODE_MAX_TIME=${PIPE_MODE_MAX_TIME:-10}
       - STORAGE_PATH=/app/storage
-      - HTTP_PROXY=${HTTP_PROXY:-http://192.168.1.47:2081}
-      - HTTPS_PROXY=${HTTPS_PROXY:-http://192.168.1.47:2081}
+      - HTTP_PROXY=http://192.168.1.48:7890
+      - HTTPS_PROXY=http://192.168.1.48:7890
+      - NO_PROXY=localhost,127.0.0.1
     volumes:
       - ./storage:/app/storage
+      - ./vault/secrets:/etc/vault/secrets:ro
+
+networks:
+  secrets-net:
+    external: true

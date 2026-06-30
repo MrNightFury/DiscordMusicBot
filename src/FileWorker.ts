@@ -4,6 +4,18 @@ import ytdl from "ytdl-core";
 
 import { youtubeDl } from "youtube-dl-exec"
 
+type YoutubeDlFlags = NonNullable<Parameters<typeof youtubeDl>[1]> & {
+    extractorArgs?: string;
+};
+
+type YoutubeDlJsRuntime = NonNullable<YoutubeDlFlags["jsRuntimes"]>;
+
+const DEFAULT_YOUTUBE_JS_RUNTIME: YoutubeDlJsRuntime = "node:/usr/local/bin/node";
+
+function isYoutubeDlJsRuntime(value: string): value is YoutubeDlJsRuntime {
+    return /^(node|bun|quickjs|deno)(:.+)?$/.test(value);
+}
+
 
 export interface SoundFileInfo {
     path: string;
@@ -55,25 +67,55 @@ export class FileWorker {
 
         let id = "temp/" + ytdl.getURLVideoID(url);
 
+        const tempDir = path.join(this.basePath, "temp");
+        if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+        }
+
         if (fs.existsSync(path.join(this.basePath, id + ".mp3"))) {
             console.log("Skipping download using cache")
             return id;
         }
 
-        return new Promise<string>((resolve, reject) => {
-            youtubeDl(url, {
-                output: path.join(this.basePath, id + ".mp3"),
-                extractAudio: true,
-                audioFormat: "mp3"
-            }).catch(err => {
-                console.error(err);
-                reject(err);
-            }).then(data => {
-                if (data && typeof data == "string" && data.indexOf("Deleting original file") != -1) {
-                    console.log("File downloaded")
-                    resolve(id);
-                }
-            })
+        const cookiesPath = process.env.YOUTUBE_COOKIES_PATH || path.join(this.basePath, "cookies.txt");
+        const configuredJsRuntime = process.env.YOUTUBE_JS_RUNTIME;
+        const jsRuntimes = configuredJsRuntime && isYoutubeDlJsRuntime(configuredJsRuntime)
+            ? configuredJsRuntime
+            : DEFAULT_YOUTUBE_JS_RUNTIME;
+
+        if (configuredJsRuntime && !isYoutubeDlJsRuntime(configuredJsRuntime)) {
+            console.warn(`Invalid YOUTUBE_JS_RUNTIME=${configuredJsRuntime}; using ${DEFAULT_YOUTUBE_JS_RUNTIME}`);
+        }
+
+        const downloadOptions: YoutubeDlFlags = {
+            output: path.join(this.basePath, id + ".mp3"),
+            // Prefer audio-only (a few MB per song). Fall back to the lowest
+            // quality combined stream when no audio-only exists (DRM videos,
+            // some platforms) so we still extract audio without pulling full
+            // HD video. Typical worst fallback: ~150 KB/s of 144p m4v.
+            format: process.env.YOUTUBE_FORMAT || "bestaudio/worst",
+            extractAudio: true,
+            audioFormat: "mp3",
+            noPlaylist: true,
+            retries: 3,
+            socketTimeout: 30,
+            jsRuntimes,
+            extractorArgs: process.env.YOUTUBE_EXTRACTOR_ARGS || "youtube:player_client=web,tv"
+        };
+
+        if (fs.existsSync(cookiesPath)) {
+            console.log(`Using YouTube cookies from ${cookiesPath}`);
+            downloadOptions.cookies = cookiesPath;
+        } else {
+            console.warn(`YouTube cookies file not found at ${cookiesPath}; download may fail on bot checks`);
+        }
+
+        return youtubeDl(url, downloadOptions).then(() => {
+            console.log("File downloaded");
+            return id;
+        }).catch(err => {
+            console.error(err);
+            throw err;
         })
     }
 }

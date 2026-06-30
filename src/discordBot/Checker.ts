@@ -1,8 +1,8 @@
-import { CommandInteraction, VoiceBasedChannel } from "discord.js";
+import { ChatInputCommandInteraction, VoiceBasedChannel } from "discord.js";
 
 
 export class Checker {
-    static async GetChannelFromInteraction(interaction: CommandInteraction): Promise<VoiceBasedChannel | false> {
+    static async GetChannelFromInteraction(interaction: ChatInputCommandInteraction): Promise<VoiceBasedChannel | false> {
         if (!interaction.guildId) {
             await interaction.followUp({ content: 'Command only allowed in guild!', ephemeral: true });
             return false;

@@ -1,11 +1,11 @@
-import { AutocompleteInteraction, CommandInteraction, ChatInputApplicationCommandData, Client } from "discord.js";
+import { AutocompleteInteraction, ChatInputApplicationCommandData, ChatInputCommandInteraction, Client } from "discord.js";
 
 import { Bot } from "./DiscordBot.ts";
 
 
 export interface Command extends ChatInputApplicationCommandData {
-    run: (this: Bot, client: Client, interaction: CommandInteraction) => {};
-    autocomplete?: (this: Bot, client: Client, interaction: AutocompleteInteraction) => {};
+    run: (this: Bot, client: Client, interaction: ChatInputCommandInteraction) => Promise<void> | void;
+    autocomplete?: (this: Bot, client: Client, interaction: AutocompleteInteraction) => Promise<void> | void;
 }
 
 /**

@@ -7,6 +7,9 @@
   "author": "MrNightFury",
   "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "buildnrun": "yarn run build && yarn run start",
     "build": "tsc",

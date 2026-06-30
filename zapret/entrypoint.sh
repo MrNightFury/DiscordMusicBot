@@ -3,75 +3,83 @@ set -e
 
 QNUM=${ZAPRET_QNUM:-200}
 MARK=0x40000000
+FAKE="/opt/zapret/files/fake"
 
-echo "Setting up iptables rules for DPI bypass..."
+DISCORD_DOMAINS="discord.com discord.gg discordapp.com discordapp.net gateway.discord.gg status.discord.com discord.media"
 
-# TCP 443 (Discord REST, Gateway, Voice WebSocket signaling)
+ipset create discord_ips hash:ip -exist 2>/dev/null || ipset flush discord_ips 2>/dev/null || true
+ipset create discord_ips6 hash:ip family inet6 -exist 2>/dev/null || ipset flush discord_ips6 2>/dev/null || true
+
+for domain in $DISCORD_DOMAINS; do
+    for ip in $(dig +short A "$domain" 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'); do
+        ipset add discord_ips "$ip" 2>/dev/null || true
+    done
+    for ip in $(dig +short AAAA "$domain" 2>/dev/null | grep -E '^[a-fA-F0-9:]+$'); do
+        ipset add discord_ips6 "$ip" 2>/dev/null || true
+    done
+done
+
+iptables -t mangle -I POSTROUTING -p udp --dport 443 \
+    -m set --match-set discord_ips dst \
+    -m connbytes --connbytes-dir=original --connbytes-mode=packets --connbytes 1:6 \
+    -m mark ! --mark $MARK/$MARK \
+    -j NFQUEUE --queue-num $QNUM --queue-bypass
+
+iptables -t mangle -I POSTROUTING -p udp -m multiport --dports 19294:19344 \
+    -m set --match-set discord_ips dst \
+    -m connbytes --connbytes-dir=original --connbytes-mode=packets --connbytes 1:6 \
+    -m mark ! --mark $MARK/$MARK \
+    -j NFQUEUE --queue-num $QNUM --queue-bypass
+
+iptables -t mangle -I POSTROUTING -p udp -m multiport --dports 50000:65535 \
+    -m set --match-set discord_ips dst \
+    -m connbytes --connbytes-dir=original --connbytes-mode=packets --connbytes 1:6 \
+    -m mark ! --mark $MARK/$MARK \
+    -j NFQUEUE --queue-num $QNUM --queue-bypass
+
 iptables -t mangle -I POSTROUTING -p tcp --dport 443 \
+    -m set --match-set discord_ips dst \
     -m connbytes --connbytes-dir=original --connbytes-mode=packets --connbytes 1:6 \
     -m mark ! --mark $MARK/$MARK \
     -j NFQUEUE --queue-num $QNUM --queue-bypass
 
-# UDP all ports (Discord voice uses dynamic ports)
-iptables -t mangle -I POSTROUTING -p udp \
+iptables -t mangle -I POSTROUTING -p tcp -m multiport --dports 2053,2083,2087,2096,8443 \
+    -m set --match-set discord_ips dst \
     -m connbytes --connbytes-dir=original --connbytes-mode=packets --connbytes 1:6 \
     -m mark ! --mark $MARK/$MARK \
     -j NFQUEUE --queue-num $QNUM --queue-bypass
 
-# IPv6 rules (if available)
-if ip6tables -L -n >/dev/null 2>&1; then
-    ip6tables -t mangle -I POSTROUTING -p tcp --dport 443 \
-        -m connbytes --connbytes-dir=original --connbytes-mode=packets --connbytes 1:6 \
-        -m mark ! --mark $MARK/$MARK \
-        -j NFQUEUE --queue-num $QNUM --queue-bypass 2>/dev/null || true
+echo "IPs in discord_ips set:"
+ipset list discord_ips 2>/dev/null || true
 
-    ip6tables -t mangle -I POSTROUTING -p udp \
-        -m connbytes --connbytes-dir=original --connbytes-mode=packets --connbytes 1:6 \
-        -m mark ! --mark $MARK/$MARK \
-        -j NFQUEUE --queue-num $QNUM --queue-bypass 2>/dev/null || true
-fi
+echo ""
+echo "Starting nfqws (kartavkun strategies)..."
 
-echo "Starting nfqws (queue $QNUM)..."
-
-# Cleanup iptables on exit
-cleanup() {
-    echo "Cleaning up iptables rules..."
-    iptables -t mangle -D POSTROUTING -p tcp --dport 443 \
-        -m connbytes --connbytes-dir=original --connbytes-mode=packets --connbytes 1:6 \
-        -m mark ! --mark $MARK/$MARK \
-        -j NFQUEUE --queue-num $QNUM --queue-bypass 2>/dev/null || true
-    iptables -t mangle -D POSTROUTING -p udp \
-        -m connbytes --connbytes-dir=original --connbytes-mode=packets --connbytes 1:6 \
-        -m mark ! --mark $MARK/$MARK \
-        -j NFQUEUE --queue-num $QNUM --queue-bypass 2>/dev/null || true
-    ip6tables -t mangle -D POSTROUTING -p tcp --dport 443 \
-        -m connbytes --connbytes-dir=original --connbytes-mode=packets --connbytes 1:6 \
-        -m mark ! --mark $MARK/$MARK \
-        -j NFQUEUE --queue-num $QNUM --queue-bypass 2>/dev/null || true
-    ip6tables -t mangle -D POSTROUTING -p udp \
-        -m connbytes --connbytes-dir=original --connbytes-mode=packets --connbytes 1:6 \
-        -m mark ! --mark $MARK/$MARK \
-        -j NFQUEUE --queue-num $QNUM --queue-bypass 2>/dev/null || true
-}
-trap cleanup EXIT
-
-# nfqws strategies:
-# Profile 1: TLS (TCP 443) — fake + multidisorder with split at midsld
-# Profile 2: Discord voice (UDP, L7 detection) — fake desync
-# Profile 3: QUIC (UDP 443) — fake desync
-#
-# Tune these params with blockcheck.sh if needed for your ISP
 exec nfqws \
     --qnum=$QNUM \
-    --filter-tcp=443 \
-    --dpi-desync=fake,multidisorder \
-    --dpi-desync-split-pos=1,midsld \
-    --dpi-desync-fooling=md5sig \
-    --new \
-    --filter-l7=discord,stun \
-    --dpi-desync=fake \
-    --dpi-desync-repeats=6 \
-    --new \
+    --debug \
+    --dpi-desync-any-protocol \
     --filter-udp=443 \
     --dpi-desync=fake \
-    --dpi-desync-repeats=6
+    --dpi-desync-repeats=6 \
+    --dpi-desync-fake-quic=${FAKE}/quic_initial_www_google_com.bin \
+    --new \
+    --dpi-desync-any-protocol \
+    --filter-udp=19294-19344,50000-50100 \
+    --filter-l7=discord,stun \
+    --dpi-desync=fake \
+    --dpi-desync-fake-discord=${FAKE}/discord-ip-discovery-with-port.bin \
+    --dpi-desync-fake-stun=${FAKE}/stun.bin \
+    --dpi-desync-repeats=6 \
+    --new \
+    --dpi-desync-any-protocol \
+    --filter-tcp=2053,2083,2087,2096,8443 \
+    --dpi-desync=fake \
+    --dpi-desync-fake-tls=${FAKE}/tls_clienthello_www_google_com.bin \
+    --dpi-desync-fooling=ts \
+    --new \
+    --dpi-desync-any-protocol \
+    --filter-tcp=80,443 \
+    --dpi-desync=fake \
+    --dpi-desync-fake-tls=${FAKE}/tls_clienthello_www_google_com.bin \
+    --dpi-desync-fooling=ts

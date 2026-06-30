@@ -51,9 +51,9 @@ export class Application {
         })
 
         app.post("/sound", async (req, res) => {
-            console.log(req.body);
             let guildId = req.body.guildId;
             let sound = req.body.sound;
+            console.log("Sound request", { guildId, sound });
             let tokenString = req.header("Authorization");
             if (!guildId || !sound || !tokenString) {
                 res.status(HTTPStatus.BAD_REQUEST).json({message: `\`${sound ? (tokenString ? "guildId" : "token") : "sound" }\` field is required`});
@@ -61,9 +61,6 @@ export class Application {
             }
 
             let token = JWTHelper.verify(tokenString);
-            console.log("Token: ", token);
-            console.log("Guild ID: ", guildId);
-            console.log("token.guild: ", token ? token.guild : "null");
             if (!token || token.guild != guildId) {
                 res.status(HTTPStatus.UNAUTHORIZED).json({message: "Incorrect token"});
                 return;

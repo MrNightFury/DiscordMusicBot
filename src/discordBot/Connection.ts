@@ -14,5 +14,6 @@ export interface Connection {
     connection: VoiceConnection;
     resource?: AudioResource;
     pipeMode?: PipeMode;
+    aloneDisconnectTimer?: NodeJS.Timeout;
     lastCommandChannel?: SendableChannels;
 }
