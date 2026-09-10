@@ -99,9 +99,12 @@ export class FileWorker {
             noPlaylist: true,
             retries: 3,
             socketTimeout: 30,
-            jsRuntimes,
-            extractorArgs: process.env.YOUTUBE_EXTRACTOR_ARGS || "youtube:player_client=web,tv"
+            jsRuntimes
         };
+
+        if (process.env.YOUTUBE_EXTRACTOR_ARGS) {
+            downloadOptions.extractorArgs = process.env.YOUTUBE_EXTRACTOR_ARGS;
+        }
 
         if (fs.existsSync(cookiesPath)) {
             console.log(`Using YouTube cookies from ${cookiesPath}`);

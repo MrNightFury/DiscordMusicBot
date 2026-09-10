@@ -11,3 +11,5 @@ zapret-host/
 zapret/bin/
 *.zip
 session-*.md
+.sisyphus/
+yt-dlp.conf

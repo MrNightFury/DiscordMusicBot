@@ -1,10 +1,11 @@
 services:
   vault-agent:
-    image: hashicorp/vault:1.18
+    image: hashicorp/vault:2.0.4
     container_name: newdiscord-vault-agent
     restart: unless-stopped
     user: "0:0"
     environment:
+      - SKIP_SETCAP=1
       - HOME=/tmp
       - VAULT_ADDR=http://vault:8200
     networks:
@@ -41,12 +42,14 @@ services:
       - PREFIX=${PREFIX:-/}
       - PIPE_MODE_MAX_TIME=${PIPE_MODE_MAX_TIME:-10}
       - STORAGE_PATH=/app/storage
-      - HTTP_PROXY=http://192.168.1.48:7890
-      - HTTPS_PROXY=http://192.168.1.48:7890
-      - NO_PROXY=localhost,127.0.0.1
     volumes:
       - ./storage:/app/storage
       - ./vault/secrets:/etc/vault/secrets:ro
+      # Маршрут YouTube-трафика (см. git-log 2026-09-02/09-11): yt-dlp читает этот
+      # конфиг при каждом запуске. Переключение прокси/напрямую — переписыванием
+      # файла на хосте (делает ~/bin/discordbot-healthcheck.sh), рестарт не нужен.
+      # Discord-трафик идёт напрямую всегда и этого конфига не видит.
+      - ./yt-dlp.conf:/root/.config/yt-dlp/config:ro
 
 networks:
   secrets-net:
