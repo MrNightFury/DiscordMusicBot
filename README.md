@@ -26,6 +26,7 @@ A TypeScript-based Discord music bot with HTTP control API.
 | `STORAGE_PATH` | No | `./storage` | Path for sound file storage |
 | `HTTP_PROXY` | No | `http://host.docker.internal:7890` | HTTP proxy for Discord API |
 | `HTTPS_PROXY` | No | `http://host.docker.internal:7890` | HTTPS proxy for Discord API |
+| `YOUTUBE_FALLBACK_PROXY` | No | - | Proxy for yt-dlp retry when a direct-config download fails (attempt 2) |
 
 ## Proxy Configuration
 

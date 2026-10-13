@@ -103,7 +103,6 @@ export class AudioPlayer {
 
     /**
      * @deprecated
-     * Mixed play sound
      */
     async _playSound(guildId: string, sound: string): Promise<boolean> {
         let connection = this.bot.connections.get(guildId || "");
@@ -131,6 +130,21 @@ export class AudioPlayer {
         } else {
             return connection.player.playSound(path);
         }
+    }
+
+    /**
+     * /stream entry: build a lazy yt-dlp stdout SongSource (no disk I/O) and
+     * play/queue it in the shared voice queue. Returns the play result.
+     */
+    async playStreamByUrl(guildId: string, url: string): Promise<PlayTryResult> {
+        let connection = this.bot.connections.get(guildId || "");
+        if (!connection) {
+            return PlayTryResult.Error;
+        }
+
+        const song = this.bot.fileWorker.prepareStreamSong(url);
+        console.log(`Prepared stream source for ${guildId}`);
+        return connection.player.playSong(song);
     }
 
     skipSong(guildId: string) {
